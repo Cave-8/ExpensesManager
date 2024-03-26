@@ -1,0 +1,52 @@
+/* Layout */
+Screen {
+    layout: horizontal;
+    background: $background;
+    align: center middle;
+}
+
+.windowMenu {
+    align: center middle;
+    width: 33%;
+    border: solid black;
+}
+
+.windowActive {
+    align: center middle;
+    height: 100%;
+    width: 66%;
+    border: solid black;
+}
+
+/* Menu */
+.menuButtons {
+    align: center middle;
+    width: 100%;
+    border: $background;
+    background: $background;
+}
+
+/* Action window */
+.actionWindow {
+    align: center middle;
+    width: 100%;
+    border: $background;
+    background: $background;
+}
+
+.inputForm {
+    width: 50%;
+    border: solid black;
+    background: $background;
+}
+
+.inputButtons {
+    width: 100%;
+    border: $background;
+    background: $background;
+}
+
+.inputContainer {
+    height: auto;
+    align: center top;
+}

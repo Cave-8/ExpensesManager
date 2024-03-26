@@ -11,8 +11,8 @@ import json
 from pymongo.errors import ConnectionFailure
 
 # Used objects
-from objects.expense import Expense
-from objects.income import Income
+from expenses_manager.objects.expense import Expense
+
 
 ############
 # DB setup #
@@ -72,9 +72,9 @@ def main(expenses, income):
                     pprint(x)
             case 5:
                 toDump = [expenses.find({}), income.find({})]
-                with open('dumps/expenses.json', 'w') as file:
+                with open('dumps/expenses - ' + datetime.now().strftime("%Y-%m-%d-%H%M%S") + '.json', 'w') as file:
                     json.dump(json.loads(dumps(toDump[0])), file)
-                with open('dumps/income.json', 'w') as file:
+                with open('dumps/income - ' + datetime.now().strftime("%Y-%mm-%d-%H%M%S") + '.json', 'w') as file:
                     json.dump(json.loads(dumps(toDump[1])), file)
             case 6:
                 return
