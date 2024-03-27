@@ -25,11 +25,12 @@ def setup():
     # Initialize DB
     database = client.get_database("database")
     expenses = database.get_collection("expenses")
-    # expenses.drop()
+    #expenses.drop()
     income = database.get_collection("income")
-    # income.drop()
+    #income.drop()
 
     return expenses, income
+
 
 #############
 # Edit data #
@@ -38,9 +39,11 @@ def insertExpense(middleware, desc, amount, ts):
     newExp = Expense(desc, amount, ts)
     middleware.expenses.insert_one(newExp.to_dict())
 
+
 def insertIncome(middleware, desc, amount, ts):
     newInc = Income(desc, amount, ts)
     middleware.income.insert_one(newInc.to_dict())
+
 
 ##################
 # Access to data #
@@ -48,8 +51,10 @@ def insertIncome(middleware, desc, amount, ts):
 def retrieveExpenses(middleware):
     return middleware.expenses.find({})
 
+
 def retrieveIncomes(middleware):
     return middleware.income.find({})
+
 
 def dumpDB(middleware):
     toDump = [middleware.expenses.find({}), middleware.income.find({})]

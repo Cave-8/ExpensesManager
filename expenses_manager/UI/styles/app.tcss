@@ -1,8 +1,7 @@
 /* Layout */
 Screen {
-    layout: horizontal;
     background: $background;
-    align: center middle;
+    layout: horizontal;
 }
 
 .windowMenu {
@@ -16,6 +15,19 @@ Screen {
     height: 100%;
     width: 66%;
     border: solid black;
+}
+
+.outputWindowActive {
+    text-align: center;
+}
+
+#scroller {
+    scrollbar-background: $surface-darken-1;
+    scrollbar-background-active: $surface-darken-1;
+    scrollbar-background-hover: $surface-darken-1;
+    scrollbar-color: black;
+    scrollbar-color-active: black;
+    scrollbar-color-hover: black;
 }
 
 /* Menu */
@@ -40,7 +52,7 @@ Screen {
     background: $background;
 }
 
-.inputButtons {
+.inputButton {
     width: 100%;
     border: $background;
     background: $background;
@@ -50,3 +62,10 @@ Screen {
     height: auto;
     align: center top;
 }
+
+/* Tables */
+.table {
+    padding: 1;
+    background: $background;
+}
+

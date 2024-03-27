@@ -2,18 +2,24 @@
 # Imports #
 ###########
 # Frontend
+from datetime import datetime
+import pprint
+
 from textual import on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual.widgets import Header, Footer, Button, Static, Input
+from textual.widgets import Header, Footer, Button, Static, Input, DataTable
 from textual.containers import VerticalScroll, Container
 
 # Backend
 from ..backend.middleware import Middleware
-from ..backend.backend import dumpDB, setup
+from ..backend.backend import dumpDB, setup, insertExpense, insertIncome, retrieveExpenses, retrieveIncomes
+
 mid = Middleware
+
+
 ###############
 # Menu widget #
 ###############
@@ -22,12 +28,13 @@ class Menu(Widget):
     BORDER_TITLE = "Menu"
 
     def compose(self) -> ComposeResult:
-        with VerticalScroll():
+        with VerticalScroll(id="scroller"):
             yield Button("Register new expense", id="t0", classes="menuButtons")
             yield Button("Register new income", id="t1", classes="menuButtons")
             yield Button("See your expenses", id="t2", classes="menuButtons")
             yield Button("See your incomes", id="t3", classes="menuButtons")
             yield Button("Dump JSON", id="dumpJSON", classes="menuButtons")
+
 
 ######################
 # Operational window #
@@ -35,18 +42,56 @@ class Menu(Widget):
 class InsertExpense(Widget):
 
     def compose(self) -> ComposeResult:
-        with VerticalScroll():
-            yield Container(Input(placeholder="Description of your expense", classes="inputForm"), classes="inputContainer")
-            yield Container(Input(placeholder="Amount of your expense", classes="inputForm"), classes="inputContainer")
-            yield Button("Confirm expense", id="confirmExpense", classes="inputButtons")
+        yield Container(Input(placeholder="Description of your expense", classes="inputForm", id="nameExpense"),
+                        classes="inputContainer")
+        yield Container(
+            Input(placeholder="Amount of your expense", classes="inputForm", id="amountExpense", type="number"),
+            classes="inputContainer")
+        yield Button("Confirm expense", id="confirmExpense", classes="inputButton")
+
 
 class InsertIncome(Widget):
 
     def compose(self) -> ComposeResult:
-        with VerticalScroll():
-            yield Container(Input(placeholder="Description of your income", classes="inputForm"), classes="inputContainer")
-            yield Container(Input(placeholder="Amount of your income", classes="inputForm"), classes="inputContainer")
-            yield Button("Confirm income", id="confirmIncome", classes="inputButtons")
+        yield Container(Input(placeholder="Description of your income", classes="inputForm", id="nameIncome"),
+                        classes="inputContainer")
+        yield Container(
+            Input(placeholder="Amount of your income", classes="inputForm", id="amountIncome", type="number"),
+            classes="inputContainer")
+        yield Button("Confirm income", id="confirmIncome", classes="inputButton")
+
+
+class ShowExpenses(Widget):
+
+    def compose(self) -> ComposeResult:
+        yield DataTable(id="expensesTable", classes="table")
+
+    def on_mount(self) -> None:
+        expenses = [list(x.values())[1:] for x in retrieveExpenses(mid)]
+
+        table = self.query_one('#expensesTable', DataTable)
+        table.zebra_stripes = 1
+        table.add_columns("Description", "Amount", "Timestamp")
+
+        for x in expenses:
+            table.add_row(x[0], x[1], x[2])
+
+
+class ShowIncomes(Widget):
+
+    def compose(self) -> ComposeResult:
+        yield DataTable(id="incomesTable", classes="table")
+
+    def on_mount(self) -> None:
+        expenses = [list(x.values())[1:] for x in retrieveIncomes(mid)]
+
+        table = self.query_one('#incomesTable', DataTable)
+        table.zebra_stripes = 1
+        table.add_columns("Description", "Amount", "Timestamp")
+
+        for x in expenses:
+            table.add_row(x[0], x[1], x[2])
+
 
 class OpWindow(Widget):
     BORDER_TITLE = "Action"
@@ -58,26 +103,26 @@ class OpWindow(Widget):
         self.refresh(recompose=True)
 
     def compose(self) -> ComposeResult:
-         with self.prevent():
-             match self.currTab:
-                case "t0":
-                    yield InsertExpense()
-                case "t1":
-                    yield InsertIncome()
-                case "t2":
-                    yield Static("Test2", classes="actionWindow")
-                case "t3":
-                    yield Static("Test3", classes="actionWindow")
-                case "dumpJSON":
-                    yield Static("Dump created, visible in dumps folder!")
-                case "confirmExpense" | "confirmIncome":
-                    #TODO Insert actual database validation
-                    yield Static("Operation confirmed ✓")
-                case _:
-                    yield Static()
+        match self.currTab:
+            case "t0":
+                yield InsertExpense()
+            case "t1":
+                yield InsertIncome()
+            case "t2":
+                yield ShowExpenses()
+            case "t3":
+                yield ShowIncomes()
+            case "dumpJSON":
+                yield Static("Dump created, visible in dumps folder!", classes="outputWindowActive")
+            case "confirmExpense" | "confirmIncome":
+                # TODO Insert actual database validation
+                yield Static("Operation confirmed ✓", classes="outputWindowActive")
+            case _:
+                yield Static()
+
 
 ############
-# Main expenses_manager #
+# Main App #
 ############
 class ExpensesManager(App):
     ############
@@ -94,7 +139,7 @@ class ExpensesManager(App):
 
     # (Key, action, description)
     BINDINGS = [
-        # Binding("d", "toggle_dark", "Toggle dark mode"),
+        #    Binding("d", "toggle_dark", "Toggle dark mode"),
         Binding("ctrl+q", "quit", "Quit application"),
     ]
 
@@ -107,8 +152,7 @@ class ExpensesManager(App):
         yield Menu(classes="windowMenu")
         yield OpWindow(classes="windowActive")
 
-        #yield ActiveScene(classes="window")
-        yield Footer()
+    #    yield Footer()
 
     #####################
     # Events management #
@@ -117,36 +161,36 @@ class ExpensesManager(App):
     @on(Button.Pressed)
     def menu_button_pressed(self, event: Button.Pressed):
         for w in self.query(OpWindow):
-            with w.prevent():
-                w.currTab = event.button.id
+            w.currTab = event.button.id
 
     # Confirm insertion of a new expense
     @on(Button.Pressed, "#confirmExpense")
     def expense_confirm(self, event: Button.Pressed):
         for w in self.query(OpWindow):
-            with w.prevent():
-                # TODO Execute insert
-                w.currTab = event.button.id
+            nameExp = self.query_one('#nameExpense', Input)
+            amount = self.query_one('#amountExpense', Input)
+            ts = datetime.now().strftime("%Y%m%d-%H%M")
+            insertExpense(mid, nameExp.value, amount.value, ts)
+            w.currTab = event.button.id
 
     # Confirm insertion of a new income
     @on(Button.Pressed, "#confirmIncome")
     def income_confirm(self, event: Button.Pressed):
         for w in self.query(OpWindow):
-            with w.prevent():
-                # TODO Execute insert
-                w.currTab = event.button.id
+            nameInc = self.query_one('#nameIncome', Input)
+            amount = self.query_one('#amountIncome', Input)
+            ts = datetime.now().strftime("%Y%m%d-%H%M")
+            insertIncome(mid, nameInc.value, amount.value, ts)
+            w.currTab = event.button.id
 
     # Dump database
     @on(Button.Pressed, "#dumpJSON")
-    def create_dump(self, event: Button.Pressed):
-        for w in self.query(OpWindow):
-            with w.prevent():
-                dumpDB(mid)
-
+    def create_dump(self):
+        dumpDB(mid)
 
     # Toggle dark mode
     # def action_toggle_dark(self) -> None:
-    #     self.dark = not self.dark
+    #    self.dark = not self.dark
 
     # Close application
     def action_quit(self) -> None:
