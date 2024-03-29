@@ -25,9 +25,9 @@ def setup():
     # Initialize DB
     database = client.get_database("database")
     expenses = database.get_collection("expenses")
-    #expenses.drop()
+    # expenses.drop()
     income = database.get_collection("income")
-    #income.drop()
+    # income.drop()
 
     return expenses, income
 

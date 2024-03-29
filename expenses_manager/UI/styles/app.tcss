@@ -64,8 +64,87 @@ Screen {
 }
 
 /* Tables */
-.table {
+#expensesTable {
     padding: 1;
     background: $background;
+
+    .datatable--header {
+        background: #cf2d2d;
+        color: white;
+        width:10%;
+    }
+
+    .datatable--header-hover {
+        background: #cf2d2d;
+        color: white
+    }
+
+    .datatable--hover {
+        background: $secondary-lighten-2;
+    }
+
+    .datatable--cursor {
+        background: $secondary;
+    }
+
+    scrollbar-background: $surface-darken-1;
+    scrollbar-background-active: $surface-darken-1;
+    scrollbar-background-hover: $surface-darken-1;
+    scrollbar-color: black;
+    scrollbar-color-active: black;
+    scrollbar-color-hover: black;
 }
 
+#incomesTable {
+    padding: 1;
+    background: $background;
+
+    .datatable--header {
+        background: #21ad4b;
+        color: white;
+    }
+
+    .datatable--header-hover {
+        background: #21ad4b;
+        color: white;
+    }
+
+    .datatable--hover {
+        background: $secondary-lighten-2;
+    }
+
+    .datatable--cursor {
+        background: $secondary;
+    }
+
+    scrollbar-background: $surface-darken-1;
+    scrollbar-background-active: $surface-darken-1;
+    scrollbar-background-hover: $surface-darken-1;
+    scrollbar-color: black;
+    scrollbar-color-active: black;
+    scrollbar-color-hover: black;
+}
+
+Footer {
+    background: #cf2d2d;
+
+    .footer--description {
+        color: white;
+        background: #cf2d2d;
+    }
+
+    .footer--key {
+        color: white;
+        background: #cf2d2d;
+    }
+
+    .footer--highlight {
+        color: white;
+        background: #cf2d2d;
+    }
+
+    .footer--highlight-key {
+        color: white;
+        background: #cf2d2d;
+    }
+}

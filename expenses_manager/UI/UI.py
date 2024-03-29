@@ -2,9 +2,6 @@
 # Imports #
 ###########
 # Frontend
-from datetime import datetime
-import pprint
-
 from textual import on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -16,6 +13,8 @@ from textual.containers import VerticalScroll, Container
 # Backend
 from ..backend.middleware import Middleware
 from ..backend.backend import dumpDB, setup, insertExpense, insertIncome, retrieveExpenses, retrieveIncomes
+
+from datetime import datetime
 
 mid = Middleware
 
@@ -66,32 +65,114 @@ class ShowExpenses(Widget):
     def compose(self) -> ComposeResult:
         yield DataTable(id="expensesTable", classes="table")
 
+    # Workaround to fit table width, no flexible columns available
+    def on_refresh(self):
+        table = self.query_one("#expensesTable", DataTable)
+        table.disabled = True
+        for c, i in zip(table.columns.values(), range(0, 2)):
+            c.auto_width = False
+            match i:
+                case 0:
+                    c.width = int(table.size.width * 0.5)
+                    c_0 = table.size.width * 0.5
+                case 1:
+                    c.width = int(table.size.width * 0.25)
+                    c_1 = table.size.width * 0.25
+                case 2:
+                    c.width = int(table.size.width - c_0 - c_1)
+        table.disabled = False
+
+    def on_resize(self):
+        table = self.query_one("#expensesTable", DataTable)
+        table.disabled = True
+        for c, i in zip(table.columns.values(), range(0, 3)):
+            c.auto_width = False
+            match i:
+                case 0:
+                    c.width = int(table.size.width * 0.5)
+                    c_0 = table.size.width * 0.5
+                case 1:
+                    c.width = int(table.size.width * 0.25)
+                    c_1 = table.size.width * 0.25
+                case 2:
+                    c.width = int(table.size.width - c_0 - c_1)
+        table.disabled = False
+
     def on_mount(self) -> None:
         expenses = [list(x.values())[1:] for x in retrieveExpenses(mid)]
 
-        table = self.query_one('#expensesTable', DataTable)
-        table.zebra_stripes = 1
-        table.add_columns("Description", "Amount", "Timestamp")
+        table = self.query_one("#expensesTable", DataTable)
+        if len(expenses) == 0:
+            table.disabled = True
+        else:
+            table.disabled = False
+            table.zebra_stripes = 1
+            table.add_column("Description", width=None)
+            table.add_column("Amount", width=None)
+            table.add_column("Timestamp", width=None)
 
-        for x in expenses:
-            table.add_row(x[0], x[1], x[2])
+            for x in expenses:
+                table.add_row(x[0], x[1], x[2])
+
+        table.refresh()
+
 
 
 class ShowIncomes(Widget):
 
     def compose(self) -> ComposeResult:
         yield DataTable(id="incomesTable", classes="table")
+        yield Static(id="sizer", expand=True)
+
+    # Workaround to fit table width, no flexible columns available
+    def on_refresh(self):
+        table = self.query_one("#incomesTable", DataTable)
+        table.disabled = True
+        for c, i in zip(table.columns.values(), range(0, 2)):
+            c.auto_width = False
+            match i:
+                case 0:
+                    c.width = int(table.size.width * 0.5)
+                    c_0 = table.size.width * 0.5
+                case 1:
+                    c.width = int(table.size.width * 0.25)
+                    c_1 = table.size.width * 0.25
+                case 2:
+                    c.width = int(table.size.width - c_0 - c_1)
+        table.disabled = False
+
+    def on_resize(self):
+        table = self.query_one("#incomesTable", DataTable)
+        table.disabled = True
+        for c, i in zip(table.columns.values(), range(0, 3)):
+            c.auto_width = False
+            match i:
+                case 0:
+                    c.width = int(table.size.width * 0.5)
+                    c_0 = table.size.width * 0.5
+                case 1:
+                    c.width = int(table.size.width * 0.25)
+                    c_1 = table.size.width * 0.25
+                case 2:
+                    c.width = int(table.size.width - c_0 - c_1)
+        table.disabled = False
 
     def on_mount(self) -> None:
-        expenses = [list(x.values())[1:] for x in retrieveIncomes(mid)]
+        incomes = [list(x.values())[1:] for x in retrieveIncomes(mid)]
 
-        table = self.query_one('#incomesTable', DataTable)
-        table.zebra_stripes = 1
-        table.add_columns("Description", "Amount", "Timestamp")
+        table = self.query_one("#incomesTable", DataTable)
+        if len(incomes) == 0:
+            table.disabled = True
+        else:
+            table.zebra_stripes = 1
+            table.add_column("Description")
+            table.add_column("Amount")
+            table.add_column("Timestamp")
 
-        for x in expenses:
-            table.add_row(x[0], x[1], x[2])
+            for x in incomes:
+                table.add_row(x[0], x[1], x[2])
 
+            table.refresh()
 
 class OpWindow(Widget):
     BORDER_TITLE = "Action"
@@ -139,7 +220,6 @@ class ExpensesManager(App):
 
     # (Key, action, description)
     BINDINGS = [
-        #    Binding("d", "toggle_dark", "Toggle dark mode"),
         Binding("ctrl+q", "quit", "Quit application"),
     ]
 
@@ -149,10 +229,10 @@ class ExpensesManager(App):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
 
-        yield Menu(classes="windowMenu")
-        yield OpWindow(classes="windowActive")
+        yield Menu(id="menu", classes="windowMenu")
+        yield OpWindow(id="opWindow", classes="windowActive")
 
-    #    yield Footer()
+        yield Footer()
 
     #####################
     # Events management #
@@ -169,7 +249,7 @@ class ExpensesManager(App):
         for w in self.query(OpWindow):
             nameExp = self.query_one('#nameExpense', Input)
             amount = self.query_one('#amountExpense', Input)
-            ts = datetime.now().strftime("%Y%m%d-%H%M")
+            ts = datetime.now().strftime("%Y/%m/%d - %H:%M")
             insertExpense(mid, nameExp.value, amount.value, ts)
             w.currTab = event.button.id
 
@@ -179,7 +259,7 @@ class ExpensesManager(App):
         for w in self.query(OpWindow):
             nameInc = self.query_one('#nameIncome', Input)
             amount = self.query_one('#amountIncome', Input)
-            ts = datetime.now().strftime("%Y%m%d-%H%M")
+            ts = datetime.now().strftime("%Y/%m/%d - %H:%M")
             insertIncome(mid, nameInc.value, amount.value, ts)
             w.currTab = event.button.id
 
@@ -187,10 +267,6 @@ class ExpensesManager(App):
     @on(Button.Pressed, "#dumpJSON")
     def create_dump(self):
         dumpDB(mid)
-
-    # Toggle dark mode
-    # def action_toggle_dark(self) -> None:
-    #    self.dark = not self.dark
 
     # Close application
     def action_quit(self) -> None:
