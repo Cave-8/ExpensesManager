@@ -69,33 +69,34 @@ class ShowExpenses(Widget):
     def on_refresh(self):
         table = self.query_one("#expensesTable", DataTable)
         table.disabled = True
-        for c, i in zip(table.columns.values(), range(0, 2)):
-            c.auto_width = False
+        c_0, c_1 = 0, 0
+        for c, i in zip(reversed(table.columns.values()), range(0, 3)):
             match i:
                 case 0:
-                    c.width = int(table.size.width * 0.5)
-                    c_0 = table.size.width * 0.5
+                    c.auto_width = True
+                    c_0 = c.width
                 case 1:
-                    c.width = int(table.size.width * 0.25)
-                    c_1 = table.size.width * 0.25
+                    c.auto_width = True
+                    c_1 = c.width
                 case 2:
-                    c.width = int(table.size.width - c_0 - c_1)
+                    c.width = int(table.size.width - 2*c_0 - 2*c_1)
         table.disabled = False
 
     def on_resize(self):
         table = self.query_one("#expensesTable", DataTable)
         table.disabled = True
-        for c, i in zip(table.columns.values(), range(0, 3)):
-            c.auto_width = False
+        c_0, c_1 = 0, 0
+        for c, i in zip(reversed(table.columns.values()), range(0, 3)):
             match i:
                 case 0:
-                    c.width = int(table.size.width * 0.5)
-                    c_0 = table.size.width * 0.5
+                    c.auto_width = True
+                    c_0 = c.width
                 case 1:
-                    c.width = int(table.size.width * 0.25)
-                    c_1 = table.size.width * 0.25
+                    c.auto_width = True
+                    c_1 = c.width
                 case 2:
-                    c.width = int(table.size.width - c_0 - c_1)
+                    c.auto_width = False
+                    c.width = int(table.size.width - 2*c_0 - 2*c_1)
         table.disabled = False
 
     def on_mount(self) -> None:
@@ -117,7 +118,6 @@ class ShowExpenses(Widget):
         table.refresh()
 
 
-
 class ShowIncomes(Widget):
 
     def compose(self) -> ComposeResult:
@@ -128,33 +128,34 @@ class ShowIncomes(Widget):
     def on_refresh(self):
         table = self.query_one("#incomesTable", DataTable)
         table.disabled = True
-        for c, i in zip(table.columns.values(), range(0, 2)):
-            c.auto_width = False
+        c_0, c_1 = 0, 0
+        for c, i in zip(reversed(table.columns.values()), range(0, 3)):
             match i:
                 case 0:
-                    c.width = int(table.size.width * 0.5)
-                    c_0 = table.size.width * 0.5
+                    c.auto_width = True
+                    c_0 = c.width
                 case 1:
-                    c.width = int(table.size.width * 0.25)
-                    c_1 = table.size.width * 0.25
+                    c.auto_width = True
+                    c_1 = c.width
                 case 2:
-                    c.width = int(table.size.width - c_0 - c_1)
+                    c.width = int(table.size.width - 2 * c_0 - 2 * c_1)
         table.disabled = False
 
     def on_resize(self):
         table = self.query_one("#incomesTable", DataTable)
         table.disabled = True
-        for c, i in zip(table.columns.values(), range(0, 3)):
-            c.auto_width = False
+        c_0, c_1 = 0, 0
+        for c, i in zip(reversed(table.columns.values()), range(0, 3)):
             match i:
                 case 0:
-                    c.width = int(table.size.width * 0.5)
-                    c_0 = table.size.width * 0.5
+                    c.auto_width = True
+                    c_0 = c.width
                 case 1:
-                    c.width = int(table.size.width * 0.25)
-                    c_1 = table.size.width * 0.25
+                    c.auto_width = True
+                    c_1 = c.width
                 case 2:
-                    c.width = int(table.size.width - c_0 - c_1)
+                    c.auto_width = False
+                    c.width = int(table.size.width - 2 * c_0 - 2 * c_1)
         table.disabled = False
 
     def on_mount(self) -> None:
@@ -173,6 +174,7 @@ class ShowIncomes(Widget):
                 table.add_row(x[0], x[1], x[2])
 
             table.refresh()
+
 
 class OpWindow(Widget):
     BORDER_TITLE = "Action"
