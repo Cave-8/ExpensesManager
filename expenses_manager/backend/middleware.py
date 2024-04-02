@@ -1,4 +1,4 @@
 class Middleware:
-    def __init__(self, income, expenses):
-        self.income = income
+    def __init__(self, incomes, expenses):
+        self.incomes = incomes
         self.expenses = expenses

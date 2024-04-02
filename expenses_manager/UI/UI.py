@@ -7,12 +7,13 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual.widgets import Header, Footer, Button, Static, Input, DataTable
+from textual.widgets import Header, Footer, Button, Static, Input, DataTable, Select
 from textual.containers import VerticalScroll, Container
 
 # Backend
 from ..backend.middleware import Middleware
-from ..backend.backend import dumpDB, setup, insertExpense, insertIncome, retrieveExpenses, retrieveIncomes
+from ..backend.backend import dumpDB, setup, insertExpense, insertIncome, retrieveExpenses, retrieveIncomes, \
+    deleteExpense, deleteIncome
 
 from datetime import datetime
 
@@ -28,10 +29,12 @@ class Menu(Widget):
 
     def compose(self) -> ComposeResult:
         with VerticalScroll(id="scroller"):
-            yield Button("Register new expense", id="t0", classes="menuButtons")
-            yield Button("Register new income", id="t1", classes="menuButtons")
-            yield Button("See your expenses", id="t2", classes="menuButtons")
-            yield Button("See your incomes", id="t3", classes="menuButtons")
+            yield Button("Register new expense", id="insertExpense", classes="menuButtons")
+            yield Button("Register new income", id="insertIncome", classes="menuButtons")
+            yield Button("See your expenses", id="showExpenses", classes="menuButtons")
+            yield Button("See your incomes", id="showIncomes", classes="menuButtons")
+            yield Button("Delete expense", id="deleteExpense", classes="menuButtons")
+            yield Button("Delete income", id="deleteIncome", classes="menuButtons")
             yield Button("Dump JSON", id="dumpJSON", classes="menuButtons")
 
 
@@ -79,7 +82,8 @@ class ShowExpenses(Widget):
                     c.auto_width = True
                     c_1 = c.width
                 case 2:
-                    c.width = int(table.size.width - 2*c_0 - 2*c_1)
+                    c.auto_width = False
+                    c.width = int(table.size.width - 3 * c_0 - c_1)
         table.disabled = False
 
     def on_resize(self):
@@ -96,7 +100,7 @@ class ShowExpenses(Widget):
                     c_1 = c.width
                 case 2:
                     c.auto_width = False
-                    c.width = int(table.size.width - 2*c_0 - 2*c_1)
+                    c.width = int(table.size.width - 3 * c_0 - c_1)
         table.disabled = False
 
     def on_mount(self) -> None:
@@ -138,7 +142,8 @@ class ShowIncomes(Widget):
                     c.auto_width = True
                     c_1 = c.width
                 case 2:
-                    c.width = int(table.size.width - 2 * c_0 - 2 * c_1)
+                    c.auto_width = False
+                    c.width = int(table.size.width - 3 * c_0 - c_1)
         table.disabled = False
 
     def on_resize(self):
@@ -155,7 +160,7 @@ class ShowIncomes(Widget):
                     c_1 = c.width
                 case 2:
                     c.auto_width = False
-                    c.width = int(table.size.width - 2 * c_0 - 2 * c_1)
+                    c.width = int(table.size.width - 3 * c_0 - c_1)
         table.disabled = False
 
     def on_mount(self) -> None:
@@ -176,6 +181,24 @@ class ShowIncomes(Widget):
             table.refresh()
 
 
+class DeleteExpense(Widget):
+    def compose(self) -> ComposeResult:
+        incomes = [list(x.values())[1:] for x in retrieveExpenses(mid)]
+        options = [(x[0], x[1], x[2]) for x in incomes]
+
+        yield Select.from_values(options, id="selectDelExpense", prompt="Select expense to delete")
+        yield Button("Delete expense", id="confirmDeleteExpense", classes="inputButton")
+
+
+class DeleteIncome(Widget):
+    def compose(self) -> ComposeResult:
+        incomes = [list(x.values())[1:] for x in retrieveIncomes(mid)]
+        options = [(str(x[0]), x[1], x[2]) for x in incomes]
+
+        yield Select.from_values(options, id="selectDelIncome", prompt="Select income to delete")
+        yield Button("Delete income", id="confirmDeleteIncome", classes="inputButton")
+
+
 class OpWindow(Widget):
     BORDER_TITLE = "Action"
     # Attribute reactive to changes
@@ -187,14 +210,18 @@ class OpWindow(Widget):
 
     def compose(self) -> ComposeResult:
         match self.currTab:
-            case "t0":
+            case "insertExpense":
                 yield InsertExpense()
-            case "t1":
+            case "insertIncome":
                 yield InsertIncome()
-            case "t2":
+            case "showExpenses":
                 yield ShowExpenses()
-            case "t3":
+            case "showIncomes":
                 yield ShowIncomes()
+            case "deleteExpense":
+                yield DeleteExpense()
+            case "deleteIncome":
+                yield DeleteIncome()
             case "dumpJSON":
                 yield Static("Dump created, visible in dumps folder!", classes="outputWindowActive")
             case "confirmExpense" | "confirmIncome":
@@ -221,9 +248,7 @@ class ExpensesManager(App):
     ###################
 
     # (Key, action, description)
-    BINDINGS = [
-        Binding("ctrl+q", "quit", "Quit application"),
-    ]
+    BINDINGS = [Binding("ctrl+q", "quit", "Quit application")]
 
     #################
     # Create layout #
@@ -249,26 +274,54 @@ class ExpensesManager(App):
     @on(Button.Pressed, "#confirmExpense")
     def expense_confirm(self, event: Button.Pressed):
         for w in self.query(OpWindow):
-            nameExp = self.query_one('#nameExpense', Input)
-            amount = self.query_one('#amountExpense', Input)
-            ts = datetime.now().strftime("%Y/%m/%d - %H:%M")
+            nameExp = w.query_one('#nameExpense', Input)
+            amount = w.query_one('#amountExpense', Input)
+            ts = datetime.now().strftime("%Y/%m/%d - %H:%M:%S")
             insertExpense(mid, nameExp.value, amount.value, ts)
-            w.currTab = event.button.id
+            w.currTab = ""
 
     # Confirm insertion of a new income
     @on(Button.Pressed, "#confirmIncome")
     def income_confirm(self, event: Button.Pressed):
         for w in self.query(OpWindow):
-            nameInc = self.query_one('#nameIncome', Input)
-            amount = self.query_one('#amountIncome', Input)
-            ts = datetime.now().strftime("%Y/%m/%d - %H:%M")
+            nameInc = w.query_one('#nameIncome', Input)
+            amount = w.query_one('#amountIncome', Input)
+            ts = datetime.now().strftime("%Y/%m/%d - %H:%M:%S")
             insertIncome(mid, nameInc.value, amount.value, ts)
-            w.currTab = event.button.id
+            w.currTab = ""
 
     # Dump database
     @on(Button.Pressed, "#dumpJSON")
     def create_dump(self):
         dumpDB(mid)
+
+    # Manage selection between options to delete
+    @on(Select.Changed, "#selectDelIncome")
+    def select_changed(self, event: Select.Changed) -> None:
+        self.title = str(event.value)
+
+    @on(Select.Changed, "#selectDelExpense")
+    def select_changed(self, event: Select.Changed) -> None:
+        self.title = str(event.value)
+
+    @on(Button.Pressed, "#confirmDeleteExpense")
+    def delete_expense(self):
+        for w in self.query(OpWindow):
+            query = w.query_one('#selectDelExpense', Select)
+            if not query.is_blank():
+                (desc, val, ts) = query.value
+                deleteExpense(mid, desc, val, ts)
+            w.currTab = ""
+
+    @on(Button.Pressed, "#confirmDeleteIncome")
+    def delete_income(self):
+        for w in self.query(OpWindow):
+            query = w.query_one('#selectDelIncome', Select)
+            if not query.is_blank():
+                (desc, val, ts) = query.value
+                print(desc, val, ts)
+                deleteIncome(mid, desc, val, ts)
+            w.currTab = ""
 
     # Close application
     def action_quit(self) -> None:

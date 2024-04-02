@@ -125,6 +125,46 @@ Screen {
     scrollbar-color-hover: black;
 }
 
+Select {
+        height: auto;
+        background: $background;
+        color: black;
+        padding: 1;
+
+        & > SelectOverlay {
+            background: $background;
+        }
+
+        &:focus > SelectCurrent {
+            border: tall black;
+            background: $background;
+        }
+
+        .up-arrow {
+            display: none;
+        }
+
+        &.-expanded .down-arrow {
+            display: none;
+        }
+
+        &.-expanded .up-arrow {
+            display: block;
+            background: $background;
+        }
+
+        &.-expanded > SelectOverlay {
+            display: block;
+            background: $background;
+        }
+
+        &.-expanded > SelectCurrent {
+            border: tall black;
+            background: $background;
+        }
+}
+
+/* Footer */
 Footer {
     background: #cf2d2d;
 

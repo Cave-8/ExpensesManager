@@ -25,9 +25,7 @@ def setup():
     # Initialize DB
     database = client.get_database("database")
     expenses = database.get_collection("expenses")
-    # expenses.drop()
     income = database.get_collection("income")
-    # income.drop()
 
     return expenses, income
 
@@ -42,7 +40,25 @@ def insertExpense(middleware, desc, amount, ts):
 
 def insertIncome(middleware, desc, amount, ts):
     newInc = Income(desc, amount, ts)
-    middleware.income.insert_one(newInc.to_dict())
+    middleware.incomes.insert_one(newInc.to_dict())
+
+
+def deleteExpense(middleware, desc, amount, ts):
+    delExp = {
+        "desc": str(desc),
+        "amount": str(amount),
+        "timestamp": str(ts)
+    }
+    middleware.expenses.delete_one(delExp)
+
+
+def deleteIncome(middleware, desc, amount, ts):
+    delInc = {
+        "desc": str(desc),
+        "amount": str(amount),
+        "timestamp": str(ts)
+    }
+    middleware.incomes.delete_one(delInc)
 
 
 ##################
@@ -53,11 +69,11 @@ def retrieveExpenses(middleware):
 
 
 def retrieveIncomes(middleware):
-    return middleware.income.find({})
+    return middleware.incomes.find({})
 
 
 def dumpDB(middleware):
-    toDump = [middleware.expenses.find({}), middleware.income.find({})]
+    toDump = [middleware.expenses.find({}), middleware.incomes.find({})]
     with open('../dumps/expenses - ' + datetime.now().strftime("%Y-%m-%d-%H%M%S") + '.json', 'w') as file:
         json.dump(json.loads(dumps(toDump[0])), file)
     with open('../dumps/incomes - ' + datetime.now().strftime("%Y-%m-%d-%H%M%S") + '.json', 'w') as file:
