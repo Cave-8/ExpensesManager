@@ -254,7 +254,6 @@ class ExpensesManager(App):
     # Create layout #
     #################
     def compose(self) -> ComposeResult:
-        yield Header(show_clock=True)
 
         yield Menu(id="menu", classes="windowMenu")
         yield OpWindow(id="opWindow", classes="windowActive")
