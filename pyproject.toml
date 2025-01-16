@@ -3,7 +3,8 @@ name = "expenses_manager"
 version = "0.1.0"
 description = "A small tool for expenses management"
 dependencies = [
-    "pymongo"
+    "pymongo",
+    "textual"
 ]
 
 [build-system]
